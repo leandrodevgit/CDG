@@ -32,4 +32,5 @@ do motor diesel através de sonda termopar tipo K e informar essa temperatura à
 * Corte do combustível GNV em baixa rotação. A CDG lê o sinal TPS (sensor de posição do pedal do acelerador) e desta forma permite ou não o uso do GNV pelo motor do veículo.
 
 Mais detalhes podem ser consultados no manual do equipamento:
+
 https://github.com/leandrodevgit/CDG/blob/main/Central%20Diesel%20GNV%205.0.pdf
