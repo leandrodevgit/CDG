@@ -15,7 +15,7 @@
 #include "delay_ms.h"
 // fim dos includes________________________________________________________________________
 
-// Delcarações #DEFINE_____________________________________________________________________
+// DelcaraÃ§Ãµes #DEFINE_____________________________________________________________________
 // Ios
 #define sw1 		_pb0
 #define bt 			_pb1
@@ -50,20 +50,20 @@
 #define WAINTING 	1
 #define PRESS		0
 
-#define ALL   		0 	// atualiza todas as informações
+#define ALL   		0 	// atualiza todas as informaÃ§Ãµes
 #define MODO  		1	// modo. Diesel/GNV ou GNV
-#define REDUT 		2	// status redutor de pressão. ON/OFF
+#define REDUT 		2	// status redutor de pressÃ£o. ON/OFF
 #define LEVEL 		3	// Nivel de GNV
-#define TEMP  		4	// Indicação de temperatura alta
-#define PULSE 		5	// Indicação de pulso OK
-#define Tps	  		6 	// Indicação da função TPS ativa
+#define TEMP  		4	// IndicaÃ§Ã£o de temperatura alta
+#define PULSE 		5	// IndicaÃ§Ã£o de pulso OK
+#define Tps	  		6 	// IndicaÃ§Ã£o da funÃ§Ã£o TPS ativa
 #define MCON		7	// Mensagem do modo_config ativado
 
-#define CURTO 		0	// botão da interface. click curto
+#define CURTO 		0	// botÃ£o da interface. click curto
 #define LONGO 		1	// click longo
 #define IDLE  		2	// idle (sem click)
-#define RUN	  		1	// contagem de tempo de click do botão em curso
-#define STOP  		0 	// contagem de tempo de click do botão paralizada
+#define RUN	  		1	// contagem de tempo de click do botÃ£o em curso
+#define STOP  		0 	// contagem de tempo de click do botÃ£o paralizada
 
 #define BAUD_38400	25				// baud rate de 38400 p/ 16MHz
 #define READ_EGT	0xff55			// msg que solicita a leitura da sonda EGT
@@ -71,14 +71,14 @@
 #define ID_EGT 		0b01000110		// (70) ID da unidade leitora da sonda EGT
 #define dez_sec		80
 
-// fim das declarações #DEFINE_____________________________________________________________
+// fim das declaraÃ§Ãµes #DEFINE_____________________________________________________________
 
 
 // constantes______________________________________________________________________________
 
 // fim das constantes______________________________________________________________________
 
-// Vetores interrupções____________________________________________________________________
+// Vetores interrupÃ§Ãµes____________________________________________________________________
 void __attribute((interrupt(0x24))) int_ext1();	// vetor da int. externa 1
 void __attribute((interrupt(0x20))) int_tb1();	// vetor da int. time base 1
 void __attribute((interrupt(0x0C))) int_mf0();	// vetor da int. Multi Funct. 0
@@ -87,69 +87,69 @@ void __attribute((interrupt(0x2C))) UART_ISR();	// vetor da int. UART RX
 
 //variaveis globais________________________________________________________________________
 
-extern unsigned char 	ack_sts;			// indica erro na comunicação I2C (ACK=1) 1 = erro - 0 = ok
+extern unsigned char 	ack_sts;			// indica erro na comunicaÃ§Ã£o I2C (ACK=1) 1 = erro - 0 = ok
 											// variavel localizada no arquivo dsp_funcs.C
 unsigned char 			UART_ISR_Value;		// uart receive buff
 volatile unsigned char 	error_rx_flag;		// uart receive error
 
 unsigned char 			modo;				// indica qual o combustivel em uso: 0 GNV - 1 Diesel/GNV - 0x00
-bit 					modo_config;		// flag que indica se o modo config está tivado (TRUE) ou Não FALSE
-unsigned char 			s_type;				// inidica qual o tipo de sinal será lido. 0 Hall - 1 Indutivo - 0x01
-volatile unsigned char 	pulso_sts;			// indica se há pulso (hall ou indutivo) presente. OK ou NONE
+bit 					modo_config;		// flag que indica se o modo config estÃ¡ tivado (TRUE) ou NÃ£o FALSE
+unsigned char 			s_type;				// inidica qual o tipo de sinal serÃ¡ lido. 0 Hall - 1 Indutivo - 0x01
+volatile unsigned char 	pulso_sts;			// indica se hÃ¡ pulso (hall ou indutivo) presente. OK ou NONE
 volatile unsigned int 	periodo;			// variavel p/ armazenar o periodo(t) do pulso medido via stm
 volatile unsigned int 	periodo_val;		// variavel p/ armazenar o periodo valido
-volatile unsigned char 	pval_saved;			// flag usada na calibração da RPM. Informa quendo um perido valido foi salvo
+volatile unsigned char 	pval_saved;			// flag usada na calibraÃ§Ã£o da RPM. Informa quendo um perido valido foi salvo
 volatile unsigned char  indice;				// 4 leituras de periodo validas em sequencia devem ser computadas
-volatile unsigned char 	media_ok;			// flag que sinaliza que a média dos 4 periodos foi calculada
+volatile unsigned char 	media_ok;			// flag que sinaliza que a mÃ©dia dos 4 periodos foi calculada
 unsigned int t_buffer[4];					// buffer para armazenar 4 periodos (tempos medidos via smt)
-volatile unsigned char 	tout_erro;			// indica TimeOut ou periodo invalido na medição
-unsigned char 			temp_sts;			// indica se a temperatura EGT está acima do nivel selecionado
-volatile unsigned char 	timeout_menu;		// inatividade dentro do menu gera a saída do mesmo na ocorrência de timeout
-volatile unsigned char 	click;				// indica se o click do botão da interface foi curto, longo ou está em idle
-volatile unsigned char 	time_bt;			// contagem de tempo para a medição de tempo do click do botão da interface
-volatile unsigned char 	start_tbt;			// indica que a contagem do tempo de click do botão está em curso
-char 					sa_flag = 2;		// flag que indica que o pedal do acelerador não está em repouso (posição neutra)
-unsigned int 			sa_xvalue;			// contem o valor que será comparado com o valor sa_value (lido em AN4)	
-unsigned int 			sa_value;			// valor de tensão do acelerador
-unsigned char 			sa_ctrl;			// ON/OFF p/ a função sensor do acelerador
-unsigned char 			sa_fator;			// fator 1(+) = a tensão AUMENTA conforme o pelal vai ao fim de curso
-											// fator 2(-) = a tensão DIMINUI conforme o pedal vai ao fim de curso
-unsigned char 			rpm_sel;			// indica qual a rpm que está selecionada. 7(700), 9(900), 11(1100), 13(1300), 15(1500)
+volatile unsigned char 	tout_erro;			// indica TimeOut ou periodo invalido na mediÃ§Ã£o
+unsigned char 			temp_sts;			// indica se a temperatura EGT estÃ¡ acima do nivel selecionado
+volatile unsigned char 	timeout_menu;		// inatividade dentro do menu gera a saÃ­da do mesmo na ocorrÃªncia de timeout
+volatile unsigned char 	click;				// indica se o click do botÃ£o da interface foi curto, longo ou estÃ¡ em idle
+volatile unsigned char 	time_bt;			// contagem de tempo para a mediÃ§Ã£o de tempo do click do botÃ£o da interface
+volatile unsigned char 	start_tbt;			// indica que a contagem do tempo de click do botÃ£o estÃ¡ em curso
+char 					sa_flag = 2;		// flag que indica que o pedal do acelerador nÃ£o estÃ¡ em repouso (posiÃ§Ã£o neutra)
+unsigned int 			sa_xvalue;			// contem o valor que serÃ¡ comparado com o valor sa_value (lido em AN4)	
+unsigned int 			sa_value;			// valor de tensÃ£o do acelerador
+unsigned char 			sa_ctrl;			// ON/OFF p/ a funÃ§Ã£o sensor do acelerador
+unsigned char 			sa_fator;			// fator 1(+) = a tensÃ£o AUMENTA conforme o pelal vai ao fim de curso
+											// fator 2(-) = a tensÃ£o DIMINUI conforme o pedal vai ao fim de curso
+unsigned char 			rpm_sel;			// indica qual a rpm que estÃ¡ selecionada. 7(700), 9(900), 11(1100), 13(1300), 15(1500)
 unsigned int 			t_target;			// periodo alvo com base na rpm selecionada
-unsigned int 			t_800;				// periodo de 800 RPM usado para corte do GNV através da RPM marcha lenta. Usado quando TPS = OFF
-unsigned char 			last_atl;			// armazena qual foi o último valor atualizado para determindado parâmetro		
-volatile unsigned char 	poweron;			// utilizada para o primeiro acionamento do GNV. 1 = 1º acionamento, 0 = 2º ou >	
+unsigned int 			t_800;				// periodo de 800 RPM usado para corte do GNV atravÃ©s da RPM marcha lenta. Usado quando TPS = OFF
+unsigned char 			last_atl;			// armazena qual foi o Ãºltimo valor atualizado para determindado parÃ¢metro		
+volatile unsigned char 	poweron;			// utilizada para o primeiro acionamento do GNV. 1 = 1Âº acionamento, 0 = 2Âº ou >	
 unsigned char 			cnt;	
 unsigned long 			msg;				// var. de 4 bytes p/ msg a ser enviada p/ a unidade de leitura da sonda EGT
-volatile unsigned char 	r_egt;				// liberação p/ a leitura da sonda EGT	
-volatile unsigned char 	w_ret;				// 1 = esperando resposta da unidade EGT, 0 = não está aguardando reposta	
+volatile unsigned char 	r_egt;				// liberaÃ§Ã£o p/ a leitura da sonda EGT	
+volatile unsigned char 	w_ret;				// 1 = esperando resposta da unidade EGT, 0 = nÃ£o estÃ¡ aguardando reposta	
 unsigned int 			egt_temp;			// temperatura da sonda EGT. Dado recebido via UART
-unsigned int 			egt_temp_target;	// temperatura limite de operação
+unsigned int 			egt_temp_target;	// temperatura limite de operaÃ§Ã£o
 unsigned char 			temp;				// temperatura limite EGT (menu)
-unsigned int 			temp_base;			// temperatura que serve de base para se cacular as temperaturas (opções) do menu	
+unsigned int 			temp_base;			// temperatura que serve de base para se cacular as temperaturas (opÃ§Ãµes) do menu	
 bit 					TermoPar_status;	// 1 = termopar aberto ou cabeamento rompido
-char 					egt_status;			// relativo a comunicação com a unidade EGT. OK, ERRO ou TimeOut
+char 					egt_status;			// relativo a comunicaÃ§Ã£o com a unidade EGT. OK, ERRO ou TimeOut
 volatile unsigned char 	buffer[6];			// buffer para armazenar a msg via UART / CAN
-volatile unsigned char 	ctrl_byte;			// controle da recepção dos 6 bytes	
-unsigned char 			go_atl;				// liberação p/ a atualização do display
-unsigned int 			cnt_leituras;		// leituras consecutivas devem ser capturas para evitar ruido na zona de transição		
-// fim das declarações de variaveis gloabais_______________________________________________
+volatile unsigned char 	ctrl_byte;			// controle da recepÃ§Ã£o dos 6 bytes	
+unsigned char 			go_atl;				// liberaÃ§Ã£o p/ a atualizaÃ§Ã£o do display
+unsigned int 			cnt_leituras;		// leituras consecutivas devem ser capturas para evitar ruido na zona de transiÃ§Ã£o		
+// fim das declaraÃ§Ãµes de variaveis gloabais_______________________________________________
 
-// funções_________________________________________________________________________________
+// funÃ§Ãµes_________________________________________________________________________________
 void print_logo()
 {	
-	start_i2c();		// inicia a comunicação
+	start_i2c();		// inicia a comunicaÃ§Ã£o
 
 	write_i2c(0x78);	// send byte via I2C (device address + Write)
 	write_i2c(0);		// ctrl byte (COMANDO)
 	write_i2c(SSD1306_COLUMNADDR);	// set column address 0x21
-	write_i2c(0);		// coluna inicial é a zero
-	write_i2c(127);		// coluna final é a 127
+	write_i2c(0);		// coluna inicial Ã© a zero
+	write_i2c(127);		// coluna final Ã© a 127
 	write_i2c(SSD1306_PAGEADDR);	// set page address 0x22 a zero
 	write_i2c(0);
-	write_i2c(7);		// pagina final é a 7
+	write_i2c(7);		// pagina final Ã© a 7
 
-	stop_i2c();			// encerra a comunicação I2C
+	stop_i2c();			// encerra a comunicaÃ§Ã£o I2C
 
 	pre_send();
 	
@@ -161,20 +161,20 @@ void print_logo()
 		write_i2c(logo[i]);	// envia o byte	
 	}	
 
-	stop_i2c();			// encerra a comunicação I2c
+	stop_i2c();			// encerra a comunicaÃ§Ã£o I2c
 }
 //_________________________________________________________________________________________
 void print_level(unsigned char b1, unsigned char b2, unsigned char b3, unsigned char b4)
 {
 	
-	unsigned char i;	// indica qual das 4 barras que será printada
+	unsigned char i;	// indica qual das 4 barras que serÃ¡ printada
 	unsigned char j;
 	unsigned char bx[4] = {b1,b2,b3,b4};
 	unsigned char startcol = 40;
 	unsigned char endcol = 55;
 	page_setup(3,7);	// alinhamento vertical da barra. O mesmo para as 4 barras
 	
-	for(i=0; i<4; i++)	// laço para o print das 4 barras
+	for(i=0; i<4; i++)	// laÃ§o para o print das 4 barras
 	{	
 		startcol += 18;
 		endcol += 18;
@@ -201,8 +201,8 @@ void print_level(unsigned char b1, unsigned char b2, unsigned char b3, unsigned 
 //_________________________________________________________________________________________
 void w_text(char word[12], unsigned char startpage, unsigned char startcol, unsigned char size)
 {
-	// a palavra/frase é sempre escrita na mesma linha
-	// uma linha é composta por um pár de paginas. Ex: page 0 e 1
+	// a palavra/frase Ã© sempre escrita na mesma linha
+	// uma linha Ã© composta por um pÃ¡r de paginas. Ex: page 0 e 1
 	unsigned char x;				// acesso ao array bi-dimensional dos caracteres
 	unsigned char y;
 	unsigned char i=0;
@@ -211,7 +211,7 @@ void w_text(char word[12], unsigned char startpage, unsigned char startcol, unsi
 	unsigned char c_md = 1;
 	
 	page_setup(startpage, endpage);	// seta pagina inicial e final apenas uma vez. Escrita na mesma linha
-	// modo vertical de acesso a memoria p/ impressão de texto.
+	// modo vertical de acesso a memoria p/ impressÃ£o de texto.
 	acess_mem(c_md);	// vertical
 	
 	while(i<size)
@@ -220,10 +220,10 @@ void w_text(char word[12], unsigned char startpage, unsigned char startcol, unsi
 		column_setup(startcol,endcol);	// seleciona nova coluna p/ editar pixels
 		
 		pre_send();		// comando para envio de dados
-		x = word[i]-32;	// X indica qual é o caracter
-		y = 7;			// byte inicial do caracter. São 16 bytes
+		x = word[i]-32;	// X indica qual Ã© o caracter
+		y = 7;			// byte inicial do caracter. SÃ£o 16 bytes
 		
-		// laço while para envio de um caracter
+		// laÃ§o while para envio de um caracter
 		while(y<15)
 		{
 			y = y-7;
@@ -244,7 +244,7 @@ void w_text(char word[12], unsigned char startpage, unsigned char startcol, unsi
 }
 //_________________________________________________________________________________________
 void page_ind(unsigned char bola, unsigned char nbolas)
-{	// indica através das bolinhas qual é a pagina que está sendo exibida no display
+{	// indica atravÃ©s das bolinhas qual Ã© a pagina que estÃ¡ sendo exibida no display
 
 	unsigned char horiz  = (128 - (nbolas*13)) / 2;
 	unsigned char j;
@@ -253,7 +253,7 @@ void page_ind(unsigned char bola, unsigned char nbolas)
 	
 	clear_linha(7);						// limpa a linha antes de printar as bolinhas
 
-	for(i=1; i<=nbolas; i++)			// laço para printar as boloas
+	for(i=1; i<=nbolas; i++)			// laÃ§o para printar as boloas
 	{	
 		end = horiz+7;
 		column_setup(horiz, end);		// alinhamento horizontal
@@ -263,11 +263,11 @@ void page_ind(unsigned char bola, unsigned char nbolas)
 		pre_send();
 		while(j<8)						// loop para enviar os dados imagem
 		{
-			if(i == bola)				// a variavel bola indica qual é a bola que é cheia
+			if(i == bola)				// a variavel bola indica qual Ã© a bola que Ã© cheia
 			{
 				write_i2c(bola_cheia[j]);
 			}
-			else						// somente uma bola cheia é impresa
+			else						// somente uma bola cheia Ã© impresa
 			{
 				write_i2c(bola_vazia[j]);	// bola vazia
 			}
@@ -276,25 +276,25 @@ void page_ind(unsigned char bola, unsigned char nbolas)
 		}
 		stop_i2c();	
 		
-		horiz += 14;					// pula dois pixels para separação das bolas
+		horiz += 14;					// pula dois pixels para separaÃ§Ã£o das bolas
 	}
 }
 //_________________________________________________________________________________________
-void atl_mscreen(unsigned char i)		// atualização periodia da tela principal
+void atl_mscreen(unsigned char i)		// atualizaÃ§Ã£o periodia da tela principal
 {
-	// 0 ALL   = atualiza todas as informações - tempo para atualização de todos os elementos da tela: 193mS
+	// 0 ALL   = atualiza todas as informaÃ§Ãµes - tempo para atualizaÃ§Ã£o de todos os elementos da tela: 193mS
 	// 1 MODO  = modo. Diesel/GNV ou GNV
-	// 2 REDUT = status redutor de pressão. ON/OFF
+	// 2 REDUT = status redutor de pressÃ£o. ON/OFF
 	// 3 LEVEL = Nivel de GNV
-	// 4 TEMP  = Indicação de temperatura alta
-	// 5 PULSE = Indicação de pulso OK
-	// 6 Tps   = Indicação da função TPS
+	// 4 TEMP  = IndicaÃ§Ã£o de temperatura alta
+	// 5 PULSE = IndicaÃ§Ã£o de pulso OK
+	// 6 Tps   = IndicaÃ§Ã£o da funÃ§Ã£o TPS
 	// 7 MCON  = Mensagem do modo_config
 	
 	if( ((i==MODO) || (i==ALL)) && (modo != last_atl) )
 	{
 		
-		clear_linha(0);				// limpa o campo de informação
+		clear_linha(0);				// limpa o campo de informaÃ§Ã£o
 		if(modo == DieselGnv)
 		{
 			w_text(DIESELGNV,0,10,10);
@@ -322,7 +322,7 @@ void atl_mscreen(unsigned char i)		// atualização periodia da tela principal
 	{
 		unsigned int value;	
 		
-		value = read_an(5);	// faz a leitura do sensor manômetro. AN5 MANO.
+		value = read_an(5);	// faz a leitura do sensor manÃ´metro. AN5 MANO.
 		
 
 		if(value<=1310) 	// atualiza o nivel de GNV com base no valor lido no AN4
@@ -379,12 +379,12 @@ void atl_mscreen(unsigned char i)		// atualização periodia da tela principal
 				write_i2c(alerta[j]);	// icone alterta	
 			}
 			else if((egt_temp < egt_temp_target) && (egt_status == Ok))
-			{							// EGT indica que há comunicação com a unidade EGT. 
+			{							// EGT indica que hÃ¡ comunicaÃ§Ã£o com a unidade EGT. 
 				write_i2c(egt_icon[j]);	// icone egt
 			}
 			else if(egt_status == TimeOut)
 			{
-				write_i2c(0);			// local vazio indica que não há comunicação com a unidade
+				write_i2c(0);			// local vazio indica que nÃ£o hÃ¡ comunicaÃ§Ã£o com a unidade
 			}
 			
 			j++;
@@ -434,8 +434,8 @@ unsigned char check_periodo(unsigned char i)
 	}
 	
 	if(i == 3)	
-	{	// com os periodos salvos é possível fazer a verificação e média		
-		// verificação dos periodos salvos
+	{	// com os periodos salvos Ã© possÃ­vel fazer a verificaÃ§Ã£o e mÃ©dia		
+		// verificaÃ§Ã£o dos periodos salvos
 		unsigned int t_mais = (t_buffer[0] * 40)/100;		// 40%
 		unsigned int t_menos = t_buffer[0] - t_mais;		// t0 - 40%
 		t_mais += t_buffer[0];								// t0 + 40%
@@ -445,7 +445,7 @@ unsigned char check_periodo(unsigned char i)
 			((t_buffer[3] < t_mais) && (t_buffer[3] > t_menos)) )
 		{
 			periodo_val = (t_buffer[0] + t_buffer[1] + t_buffer[2] + t_buffer[3]) / 4;
-			status = TRUE;	// sinaliza que a média está  ok
+			status = TRUE;	// sinaliza que a mÃ©dia estÃ¡  ok
 		}
 	}
 	
@@ -659,7 +659,7 @@ void print_digt(char digit, char pos)
 		}
 }
 //_________________________________________________________________________________________
-void edit_tb()						// edição da tempratura base - EGT
+void edit_tb()						// ediÃ§Ã£o da tempratura base - EGT
 {
 	char i = 0;
 	char digts[7] = {0};
@@ -673,7 +673,7 @@ void edit_tb()						// edição da tempratura base - EGT
 	click = IDLE;
 	clear_dsp();
 	_clrwdt();
-	start_i2c();					// inicia a comunicação
+	start_i2c();					// inicia a comunicaÃ§Ã£o
 	write_i2c(0x78);				// send byte via I2C (device address + Write)
 	write_i2c(0);					// ctrl byte
 	write_i2c(SSD1306_INVERTDISPLAY);
@@ -681,12 +681,12 @@ void edit_tb()						// edição da tempratura base - EGT
 	
 	digitos = bcd_convert(temp_base);	
 	digts[0] = (digitos>>16);		// centena
-	digts[1] = 32;					// espaço
+	digts[1] = 32;					// espaÃ§o
 	digts[2] = (digitos>>8);		// dezena
-	digts[3] = 32;					// espaço
+	digts[3] = 32;					// espaÃ§o
 	digts[4] = digitos;				// unidade
-	digts[5] = 32;					// espaço
-	digts[6] = 91;					// °C
+	digts[5] = 32;					// espaÃ§o
+	digts[6] = 91;					// Â°C
 	w_text(">", 3, 19, 1);
 	w_text(digts, 3, 29, 7);
 	
@@ -760,7 +760,7 @@ void edit_tb()						// edição da tempratura base - EGT
 				clear_dsp();	
 				loop = FALSE;
 				clear_dsp();
-				start_i2c();					// inicia a comunicação
+				start_i2c();					// inicia a comunicaÃ§Ã£o
 				write_i2c(0x78);				// send byte via I2C (device address + Write)
 				write_i2c(0);					// ctrl byte
 				write_i2c(SSD1306_NORMALDISPLAY);
@@ -772,8 +772,8 @@ void edit_tb()						// edição da tempratura base - EGT
 //_________________________________________________________________________________________
 void egt_options(char opt)
 {
-	char t_option[5];		// texto relativo a opção de tempratura dentro de: Menu >> EGT
-	t_option[4] = 91;		// °C
+	char t_option[5];		// texto relativo a opÃ§Ã£o de tempratura dentro de: Menu >> EGT
+	t_option[4] = 91;		// Â°C
 	unsigned long digitos;
 	
 	switch(opt)
@@ -784,7 +784,7 @@ void egt_options(char opt)
 				t_option[1] = (digitos>>16);	// centena
 				t_option[2] = (digitos>>8);		// dezena
 				t_option[3] = digitos;			// unidade
-				w_text(t_option, 3, 44, 5);		// 1ª opção: xxxx°C
+				w_text(t_option, 3, 44, 5);		// 1Âª opÃ§Ã£o: xxxxÂ°C
 		break ;
 		
 		case 2:	
@@ -793,7 +793,7 @@ void egt_options(char opt)
 				t_option[1] = (digitos>>16);	
 				t_option[2] = (digitos>>8);	
 				t_option[3] = digitos;			
-				w_text(t_option, 3, 44, 5);		// 2ª opção: xxxx°C
+				w_text(t_option, 3, 44, 5);		// 2Âª opÃ§Ã£o: xxxxÂ°C
 		break ;
 		
 		case 3:
@@ -802,7 +802,7 @@ void egt_options(char opt)
 				t_option[1] = (digitos>>16);	
 				t_option[2] = (digitos>>8);	
 				t_option[3] = digitos;		
-				w_text(t_option, 3, 44, 5);		// 3ª opção: xxxx°C
+				w_text(t_option, 3, 44, 5);		// 3Âª opÃ§Ã£o: xxxxÂ°C
 		break ;
 		
 		case 4:
@@ -811,7 +811,7 @@ void egt_options(char opt)
 				t_option[1] = (digitos>>16);	
 				t_option[2] = (digitos>>8);		
 				t_option[3] = digitos;			
-				w_text(t_option, 3, 44, 5);		// 4ª opção: xxxx°C
+				w_text(t_option, 3, 44, 5);		// 4Âª opÃ§Ã£o: xxxxÂ°C
 		break ;
 		
 		case 5:
@@ -820,15 +820,15 @@ void egt_options(char opt)
 				t_option[1] = (digitos>>16);	
 				t_option[2] = (digitos>>8);	
 				t_option[3] = digitos;		
-				w_text(t_option, 3, 44, 5);		// 5ª opção: xxxx°C
+				w_text(t_option, 3, 44, 5);		// 5Âª opÃ§Ã£o: xxxxÂ°C
 		break ;
 		
 		case 6:
-				w_text(DIAG, 3, 9, 11);			// 5ª opçao: DIAGNOSTICO
+				w_text(DIAG, 3, 9, 11);			// 5Âª opÃ§ao: DIAGNOSTICO
 		break ;
 		
 		case 7:
-				w_text(VOLTAR, 3, 34, 6);		// 6ª opção: VOLTAR
+				w_text(VOLTAR, 3, 34, 6);		// 6Âª opÃ§Ã£o: VOLTAR
 		break ;
 	}
 	
@@ -855,16 +855,16 @@ char egt_manag()
 	// destino e origem da msg
 	if((buffer[0] == ID) && (buffer[1] == ID_EGT))
 	{
-		// byte 2 e 3 serão descartados		
+		// byte 2 e 3 serÃ£o descartados		
 		egt_temp = buffer[4]; 		// MSByte
 		egt_temp = (egt_temp<<8);	// desloca o valor para a parte alta
 
 		egt_temp += buffer[5]; 		// LSByte
 		TermoPar_status = (egt_temp>>2);
 		egt_temp = (egt_temp>>3);	// ajuste para colocar os 12 bits alinhados a direita
-		egt_temp = egt_temp/4;		// converte para °C
+		egt_temp = egt_temp/4;		// converte para Â°C
 		
-		// um valor acima de 4089 (12 bits) é um valor invalido.
+		// um valor acima de 4089 (12 bits) Ã© um valor invalido.
 		if((egt_temp > 4089) || (TermoPar_status == 1))		
 		{
 			result = Erro;
@@ -891,35 +891,35 @@ char egt_com()
 		if((r_egt == 1) && (w_ret == IDLE))
 		{	
 			r_egt++;
-			msg = READ_EGT;			// mensagem de 4 bytes que será enviada + 1 byte de destino + 1 byte de origem
+			msg = READ_EGT;			// mensagem de 4 bytes que serÃ¡ enviada + 1 byte de destino + 1 byte de origem
 			send_msg(msg);			// envia mensagem para a unidade EGT solicitando a temperatura
-			w_ret = WAINTING;		// sinaliza que está aguardando resposta
+			w_ret = WAINTING;		// sinaliza que estÃ¡ aguardando resposta
 			ctrl_byte = 0;			// recebe 6 bytes como resposta
 		}
 		
-		// erro na recepção da UART
+		// erro na recepÃ§Ã£o da UART
 		if( (w_ret == WAINTING) && (error_rx_flag == 1) )
 		{
-			w_ret = IDLE;			// cancela a recepção da mensagem que está em curso
-			egt_status = Erro;		// status é de erro devido ruido, frame ou overrun.
+			w_ret = IDLE;			// cancela a recepÃ§Ã£o da mensagem que estÃ¡ em curso
+			egt_status = Erro;		// status Ã© de erro devido ruido, frame ou overrun.
 			error_rx_flag = 0;		// limpa a flag
-			fast_blink();			// sinalização através do led_sts
+			fast_blink();			// sinalizaÃ§Ã£o atravÃ©s do led_sts
 		}
 		
 		// 6 bytes recebidos dentro do tempo limite para resposta
 		if((w_ret == WAINTING) && (ctrl_byte == 6) && (r_egt < 8))
 		{
-			w_ret = IDLE;			// liberaçao para um novo envio de msg
+			w_ret = IDLE;			// liberaÃ§ao para um novo envio de msg
 			egt_status = egt_manag();	
-			atl = TRUE;				// autoriza a atualização das informações na tela de diagnóstico EGT
+			atl = TRUE;				// autoriza a atualizaÃ§Ã£o das informaÃ§Ãµes na tela de diagnÃ³stico EGT
 		}
-		// ocorrência de timeout
+		// ocorrÃªncia de timeout
 		else if( (w_ret == WAINTING) && (r_egt > 8) )
 		{
-			w_ret = IDLE;			// liberaçao para um novo envio de msg
-			egt_status = TimeOut;	// status de timeout. Sem comunicação com a unidade EGT
-			atl = TRUE;				// autoriza a atualização das informações na tela de diagnóstico
-			fast_blink();			// sinalização através do led_sts
+			w_ret = IDLE;			// liberaÃ§ao para um novo envio de msg
+			egt_status = TimeOut;	// status de timeout. Sem comunicaÃ§Ã£o com a unidade EGT
+			atl = TRUE;				// autoriza a atualizaÃ§Ã£o das informaÃ§Ãµes na tela de diagnÃ³stico
+			fast_blink();			// sinalizaÃ§Ã£o atravÃ©s do led_sts
 		}
 		
 	return atl;	
@@ -930,15 +930,15 @@ void sr_options(char opt)
 	switch(opt)
 	{
 		case 1:
-				w_text(HALL, 3, 44, 4);		// 1ª opção: HALL
+				w_text(HALL, 3, 44, 4);		// 1Âª opÃ§Ã£o: HALL
 		break ;
 		
 		case 2:
-				w_text(INDUTIVO, 3, 24, 8);	// 2ª opção: INDUTIVO
+				w_text(INDUTIVO, 3, 24, 8);	// 2Âª opÃ§Ã£o: INDUTIVO
 		break ;
 		
 		case 3:
-				w_text(VOLTAR, 3, 34, 6);	// 3ª opção: VOLTAR
+				w_text(VOLTAR, 3, 34, 6);	// 3Âª opÃ§Ã£o: VOLTAR
 		break ;
 	}
 	
@@ -950,26 +950,26 @@ void sa_options(char opt)
 	switch(opt)
 	{
 		case 1:
-				w_text(ON, 3, 54, 2);			// 1ª opção: ON
+				w_text(ON, 3, 54, 2);			// 1Âª opÃ§Ã£o: ON
 		break ;
 		
 		case 2:
-				w_text(OFF, 3, 49, 3);			// 2ª opção: OFF
+				w_text(OFF, 3, 49, 3);			// 2Âª opÃ§Ã£o: OFF
 		break ;
 		
 		case 3:
-				w_text(CALIBRACAO, 3, 14, 10);	// 3ª opção: CALIBRACAO
+				w_text(CALIBRACAO, 3, 14, 10);	// 3Âª opÃ§Ã£o: CALIBRACAO
 		break ;
 		
 		case 4:
-				w_text(VOLTAR, 3, 34, 6);		// 4ª opção: VOLTAR
+				w_text(VOLTAR, 3, 34, 6);		// 4Âª opÃ§Ã£o: VOLTAR
 		break ;
 	}
 	
 	page_ind(opt,4);
 }
 //_________________________________________________________________________________________
-void sa_calibracao()	// calibração função S.ACELERADOR
+void sa_calibracao()	// calibraÃ§Ã£o funÃ§Ã£o S.ACELERADOR
 {
 	unsigned int max_course;
 	unsigned int min_course;
@@ -981,24 +981,24 @@ void sa_calibracao()	// calibração função S.ACELERADOR
 	w_text("PISE NO", 		0, 24, 7);
 	w_text("PEDAL ATE O", 	3, 8, 11);
 	w_text("FIM DO CURSO", 	6, 0, 12);
-	delay_ms(3500);		// tempo de exibição da mensagem
+	delay_ms(3500);		// tempo de exibiÃ§Ã£o da mensagem
 	_clrwdt();
-	max_course = read_an(4);	// lê o valor de tensão com o pedal no fundo. pé no fundo!
+	max_course = read_an(4);	// lÃª o valor de tensÃ£o com o pedal no fundo. pÃ© no fundo!
 	
 	_clrwdt();
 	clear_dsp();		// limpa o display
 	w_text("REMOVA O PE", 	0, 9, 11);
 	w_text("DO PEDAL", 		3, 24, 8);
 	w_text("TOTALMENTE", 	6, 14, 10);
-	delay_ms(3000);		// tempo de exibição da mensagem
+	delay_ms(3000);		// tempo de exibiÃ§Ã£o da mensagem
 	_clrwdt();
 	clear_dsp();		// limpa o display
 	
-	min_course = read_an(4);	// lê o valor de tensão com o pedal em repouso. pé fora do pedal!
+	min_course = read_an(4);	// lÃª o valor de tensÃ£o com o pedal em repouso. pÃ© fora do pedal!
 	
-	// verifica se o fator é + ou -
-	if(max_course > (min_course*2))	// a tensão do pedal no fundo deve ser > que pelo menos 2x -
-	{								// a tensão referente ao pedal em repouso
+	// verifica se o fator Ã© + ou -
+	if(max_course > (min_course*2))	// a tensÃ£o do pedal no fundo deve ser > que pelo menos 2x -
+	{								// a tensÃ£o referente ao pedal em repouso
 		sa_fator = 	POSITIVO;
 		dif = max_course - min_course;
 		sa_xvalue = ((8*dif)/100) + min_course; 
@@ -1017,7 +1017,7 @@ void sa_calibracao()	// calibração função S.ACELERADOR
 		w_text(ERRO, 0, 24, 5);	// erro ao calibrar
 		w_text(" NA", 0, 74, 3);
 		w_text(CALIBRACAO, 3, 14, 10);
-		delay_ms(2000);		// tempo de exibição da mensagem
+		delay_ms(2000);		// tempo de exibiÃ§Ã£o da mensagem
 	}
 	
 	if(status == 1)
@@ -1026,7 +1026,7 @@ void sa_calibracao()	// calibração função S.ACELERADOR
 		w_text(" NA", 0, 84, 3);
 		w_text(CALIBRACAO, 3, 14, 10);
 		_clrwdt();
-		delay_ms(2000);		// tempo de exibição da mensagem
+		delay_ms(2000);		// tempo de exibiÃ§Ã£o da mensagem
 		clear_dsp();		// limpa o display
 		_clrwdt();
 		unsigned char dat;
@@ -1113,17 +1113,17 @@ void rpm_calibracao()
 		w_text("1500 RPM E", 	3, 14, 10);
 		w_text("MANTENHA!", 	6, 19, 9);
 		_clrwdt();
-		delay_ms(3500);		// tempo de exibição da mensagem
+		delay_ms(3500);		// tempo de exibiÃ§Ã£o da mensagem
 		clear_dsp();
 		w_text("PRESSIONE", 	0, 19, 9);	
 		w_text("O BOTAO", 		3, 29, 7);
 		w_text("AO ATINGIR", 	6, 14, 10);
 		_clrwdt();
-		delay_ms(2000);		// tempo de exibição da mensagem
+		delay_ms(2000);		// tempo de exibiÃ§Ã£o da mensagem
 		click = IDLE;
 		time_bt = 0;
 		
-		// aguarda um click. O timeout é 5
+		// aguarda um click. O timeout Ã© 5
 		while((click == IDLE) && (time_bt <39))
 		{
 			_clrwdt();
@@ -1142,7 +1142,7 @@ void rpm_calibracao()
 				if(pval_saved == TRUE)	// periodo valido foi salvo?
 				{
 					pval_saved = FALSE;
-					m_ok = check_periodo(i);	// salva o periodo no buffer. Caso já tenha sido salvo os 4 periodos a média sera feita
+					m_ok = check_periodo(i);	// salva o periodo no buffer. Caso jÃ¡ tenha sido salvo os 4 periodos a mÃ©dia sera feita
 					
 					if(i<3)
 					{
@@ -1163,7 +1163,7 @@ void rpm_calibracao()
 				// salva o novo rpm 1500
 				unsigned char d = periodo_val;
 					
-				char check;						// retorno da gravação da eeprom
+				char check;						// retorno da gravaÃ§Ã£o da eeprom
 				char total_check = 0;
 				check = grava_eeprom(0x09, d);	// LSByte
 				if(check == 1)
@@ -1180,7 +1180,7 @@ void rpm_calibracao()
 					
 				callback(total_check);
 			}
-			else								// ocorreu erro na comparação dos periodos
+			else								// ocorreu erro na comparaÃ§Ã£o dos periodos
 			{
 				clear_dsp();
 				w_text("ERRO NA", 0, 29, 7);
@@ -1206,7 +1206,7 @@ void rpm_calibracao()
 		w_text("SEM SINAL", 3, 19, 9);
 		w_text("DE ROTACAO", 6, 14, 10);
 		_clrwdt();
-		delay_ms(3500);		// tempo de exibição da mensagem
+		delay_ms(3500);		// tempo de exibiÃ§Ã£o da mensagem
 		
 	}
 	
@@ -1249,12 +1249,12 @@ void rpm_options(char opt)
 		break ;
 		
 		case 17:
-				w_text(CALIBRACAO, 3, 14, 10);	// 6ª opção: CALIBRACAO
+				w_text(CALIBRACAO, 3, 14, 10);	// 6Âª opÃ§Ã£o: CALIBRACAO
 				page_ind(6,7);
 		break ;
 		
 		case 19:
-				w_text(VOLTAR, 3, 34, 6);		// 7ª opção: VOLTAR
+				w_text(VOLTAR, 3, 34, 6);		// 7Âª opÃ§Ã£o: VOLTAR
 				page_ind(7,7);
 		break ;
 	}
@@ -1274,7 +1274,7 @@ void menu()
 	char menu_pos = 1;	 
 	clear_dsp();			// limpa o display
 	page_ind(1,5);
-	w_text(RPM, 3, 49, 3);	// primeira opção: RPM
+	w_text(RPM, 3, 49, 3);	// primeira opÃ§Ã£o: RPM
 	
 	// main while do menu
 	while(menu_pos>0)
@@ -1290,10 +1290,10 @@ void menu()
 		if(click == CURTO)
 		{
 			click = IDLE;
-			menu_pos++;						// proxima opção
+			menu_pos++;						// proxima opÃ§Ã£o
 			clear_linha(3);					// limpa a linha inteira
 			page_ind(2,5);
-			w_text(TPS, 3, 49, 3);			// SEGUNDA opção: TPS
+			w_text(TPS, 3, 49, 3);			// SEGUNDA opÃ§Ã£o: TPS
 		}
 		else if(click == LONGO)
 		{
@@ -1315,7 +1315,7 @@ void menu()
 			{
 				if(options == 19)		// 19 = SAIR
 				{
-					options = 7;		// volta p/ a 1ª opção da lista
+					options = 7;		// volta p/ a 1Âª opÃ§Ã£o da lista
 				}
 				else
 				{
@@ -1339,12 +1339,12 @@ void menu()
 				}
 				else if(options == 17)	// CALIBRACAO
 				{
-					rpm_calibracao();	// chama a função que faz a calibração com base nos 1500 RPM
+					rpm_calibracao();	// chama a funÃ§Ã£o que faz a calibraÃ§Ã£o com base nos 1500 RPM
 				}
 				
 				click = IDLE;
 				menu_pos -= 10;
-				w_text(RPM, 3, 49, 3);	// primeira opção: RPM
+				w_text(RPM, 3, 49, 3);	// primeira opÃ§Ã£o: RPM
 				page_ind(1,5);
 			}
 		}
@@ -1363,10 +1363,10 @@ void menu()
 			if(click == CURTO)
 			{
 				click = IDLE;
-				menu_pos++;					// proxima opção
+				menu_pos++;					// proxima opÃ§Ã£o
 				clear_linha(3);				// limpa a linha inteira
 				page_ind(3,5);
-				w_text(EGT, 3, 49, 3);		// TERCEIRA opção: EGT
+				w_text(EGT, 3, 49, 3);		// TERCEIRA opÃ§Ã£o: EGT
 			}
 			else if(click == LONGO)
 			{
@@ -1387,13 +1387,13 @@ void menu()
 				if(click == CURTO)
 				{
 					
-					if(options == 4)		// a 4ª opção é SAIR
+					if(options == 4)		// a 4Âª opÃ§Ã£o Ã© SAIR
 					{
-						options = 1;		// volta p/ a primeira opção	
+						options = 1;		// volta p/ a primeira opÃ§Ã£o	
 					}
 					else
 					{
-						options++;			// proxima opçao	
+						options++;			// proxima opÃ§ao	
 					}
 					
 					click = IDLE;
@@ -1411,15 +1411,15 @@ void menu()
 						check = grava_eeprom(0x03, sa_ctrl);
 						callback(check);
 					}
-					else if(options == 3)	// calibração
+					else if(options == 3)	// calibraÃ§Ã£o
 					{
-						sa_calibracao();	// chama a rotina de calibração
+						sa_calibracao();	// chama a rotina de calibraÃ§Ã£o
 						timeout_menu = 0;	// reset no timeout_menu
 					}
 					
 					click = IDLE;
 					menu_pos -= 19;
-					w_text(TPS, 3, 49, 3);	// SEGUNDA opção: S.ACELERADOR
+					w_text(TPS, 3, 49, 3);	// SEGUNDA opÃ§Ã£o: S.ACELERADOR
 					page_ind(2,5);
 				}
 			}
@@ -1439,10 +1439,10 @@ void menu()
 			if(click == CURTO)
 			{
 				click = IDLE;
-				menu_pos++;					// proxima opção
+				menu_pos++;					// proxima opÃ§Ã£o
 				clear_linha(3);				// limpa a linha inteira
 				page_ind(4,5);
-				w_text(ROTACAO, 3, 19, 9);	// QUARTA opção: S.ROTAÇÃO
+				w_text(ROTACAO, 3, 19, 9);	// QUARTA opÃ§Ã£o: S.ROTAÃ‡ÃƒO
 			}	
 			
 			if(click == LONGO)
@@ -1450,7 +1450,7 @@ void menu()
 				click = IDLE;
 				menu_pos += 28;
 				clear_linha(3);				// limpa a linha inteira
-				egt_options(temp);			// vai mostrar qual a atual temperatura que está selecionada
+				egt_options(temp);			// vai mostrar qual a atual temperatura que estÃ¡ selecionada
 			}
 			
 			while(menu_pos == 31)
@@ -1464,13 +1464,13 @@ void menu()
 				if(click == CURTO)
 				{
 					click = IDLE;
-					if(options == 7)		// a 7ª opção é SAIR
+					if(options == 7)		// a 7Âª opÃ§Ã£o Ã© SAIR
 					{
-						options = 1;		// volta p/ a primeira opção	
+						options = 1;		// volta p/ a primeira opÃ§Ã£o	
 					}
 					else
 					{
-						options++;			// proxima opçao	
+						options++;			// proxima opÃ§ao	
 					}
 					clear_linha(3);			// limpa a linha inteira
 					egt_options(options);	
@@ -1492,10 +1492,10 @@ void menu()
 						while(click == IDLE)
 						{
 							_clrwdt();
-							main_scan();			// monitorara as condições para GNV ON ou OFF
-							atl  = egt_com();		// a autorização para atualização da tela é gerada com o recebimento dos 6 bytes ou TimeOut
+							main_scan();			// monitorara as condiÃ§Ãµes para GNV ON ou OFF
+							atl  = egt_com();		// a autorizaÃ§Ã£o para atualizaÃ§Ã£o da tela Ã© gerada com o recebimento dos 6 bytes ou TimeOut
 								
-							if(atl == TRUE)			// autorização para atualizar
+							if(atl == TRUE)			// autorizaÃ§Ã£o para atualizar
 							{	
 								atl = FALSE;
 									
@@ -1506,10 +1506,10 @@ void menu()
 									digts[8] = (digitos>>16);			// centena
 									digts[9] = (digitos>>8);			// dezena
 									digts[10] = digitos;				// unidade
-									digts[11] = 91;						// °C
+									digts[11] = 91;						// Â°C
 										
 									w_text(digts, 			1, 0, 12);	// temperatura
-									w_text("-COM: OK  ", 	3, 0, 10);	// comunicação com a unidade EGT
+									w_text("-COM: OK  ", 	3, 0, 10);	// comunicaÃ§Ã£o com a unidade EGT
 									w_text("-T.PAR: OK  ", 	5, 0, 12);	// sonda (termopar) conectada/desconectada
 								}
 								else if((egt_status == Erro) && (TermoPar_status == 1))
@@ -1528,32 +1528,32 @@ void menu()
 						}
 							
 						clear_dsp();			// limpa o display
-						egt_options(options);	// informação do nivel anterior
+						egt_options(options);	// informaÃ§Ã£o do nivel anterior
 						click = IDLE;
 					}
 					
 					if(options <= 5)		// 1...5 temperatura
 					{	
 						char check;
-						temp = options;		// atualiza a variavel que é usada para verificar a temperatura limite
-						check = grava_eeprom(0x02, temp);	// salva a alteração na eeprom	
+						temp = options;		// atualiza a variavel que Ã© usada para verificar a temperatura limite
+						check = grava_eeprom(0x02, temp);	// salva a alteraÃ§Ã£o na eeprom	
 						callback(check);
 						
 						atl_temps(temp);
 					}
 					
-					if((options <= 5) || (options == 7))	// ao retornar da tela de diagnostico apenas retrocede a ultima posição
+					if((options <= 5) || (options == 7))	// ao retornar da tela de diagnostico apenas retrocede a ultima posiÃ§Ã£o
 					{
 						click = IDLE;
 						menu_pos -= 28;			// volta p/ o nivel anterior
-						w_text(EGT, 3, 49, 3);	// TERCEIRA opção: EGT
+						w_text(EGT, 3, 49, 3);	// TERCEIRA opÃ§Ã£o: EGT
 						page_ind(3,5);
 					}
 				}
 			}
 		}
 		
-		// S.ROTAÇÃO
+		// S.ROTAÃ‡ÃƒO
 		while(menu_pos == 4)
 		{
 			_clrwdt();
@@ -1567,17 +1567,17 @@ void menu()
 			if(click == CURTO)
 			{
 				click = IDLE;
-				menu_pos++;					// proxima opção
+				menu_pos++;					// proxima opÃ§Ã£o
 				clear_linha(3);				// limpa a linha inteira
 				page_ind(5,5);
-				w_text(SAIR, 3, 44, 4);		// quinta opção: SAIR
+				w_text(SAIR, 3, 44, 4);		// quinta opÃ§Ã£o: SAIR
 			}
 			else if(click == LONGO)
 			{
 				click = IDLE;
 				clear_linha(3);				// limpa a linha inteira
-				menu_pos += 37;				// avança um nivel dentro do menu
-				sr_options(options);		// vai mostrar qual o tipo de sinal está selecionado			
+				menu_pos += 37;				// avanÃ§a um nivel dentro do menu
+				sr_options(options);		// vai mostrar qual o tipo de sinal estÃ¡ selecionado			
 			}	
 			
 			while(menu_pos == 41)
@@ -1591,13 +1591,13 @@ void menu()
 				if(click == CURTO)
 				{
 					click = IDLE;
-					if(options == 3)		// a 3ª opção é SAIR
+					if(options == 3)		// a 3Âª opÃ§Ã£o Ã© SAIR
 					{
-						options = 1;		// volta p/ a primeira opção	
+						options = 1;		// volta p/ a primeira opÃ§Ã£o	
 					}
 					else
 					{
-						options++;			// proxima opçao	
+						options++;			// proxima opÃ§ao	
 					}
 					clear_linha(3);			// limpa a linha inteira
 					sr_options(options);
@@ -1609,7 +1609,7 @@ void menu()
 					if(options <= 2)		// 3=SAIR
 					{
 						char check;	
-						s_type = options;	// atualiza a variavel que indica qual o tipo de sinal está sendo utilizado
+						s_type = options;	// atualiza a variavel que indica qual o tipo de sinal estÃ¡ sendo utilizado
 							
 						if(s_type == 1)
 						{
@@ -1620,13 +1620,13 @@ void menu()
 							en_hall = 0, en_ind = 1;	// enabl read inductive signal AC
 						}
 							
-						check = grava_eeprom(0x01, s_type);	// salva a alteração na eeprom	
+						check = grava_eeprom(0x01, s_type);	// salva a alteraÃ§Ã£o na eeprom	
 						callback(check);
 					}
 					
 					click = IDLE;
 					menu_pos -= 37;				// volta p/ o nivel anterior
-					w_text(ROTACAO, 3, 19, 9);	// 4ª opção: S.ROTAÇÃO	
+					w_text(ROTACAO, 3, 19, 9);	// 4Âª opÃ§Ã£o: S.ROTAÃ‡ÃƒO	
 					page_ind(4,5);
 				}
 			}
@@ -1644,10 +1644,10 @@ void menu()
 			if(click == CURTO)
 			{
 				click = IDLE;
-				menu_pos = 1;				// proxima opção
+				menu_pos = 1;				// proxima opÃ§Ã£o
 				clear_linha(3);				// limpa a linha inteira
 				page_ind(1,5);
-				w_text(RPM, 3, 49, 3);		// primeira opção: RPM
+				w_text(RPM, 3, 49, 3);		// primeira opÃ§Ã£o: RPM
 				page_ind(1,5);
 			}
 			
@@ -1665,10 +1665,10 @@ void menu()
 //_________________________________________________________________________________________
 void setup()
 {
-	//_wdtc = 0b10101101;		// watchdog timer OFF - 2¹6 = 64536/32KHz = timeout de ~2s
-	_wdtc = 0b01010110;			// watchdog timer OFF - 2¹8 = 64536/32KHz = timeout de ~8s
+	//_wdtc = 0b10101101;		// watchdog timer OFF - 2Â¹6 = 64536/32KHz = timeout de ~2s
+	_wdtc = 0b01010110;			// watchdog timer OFF - 2Â¹8 = 64536/32KHz = timeout de ~8s
 	
-	// definições dos IOs
+	// definiÃ§Ãµes dos IOs
 	_pac = 	0b11111111;
 	_pbc = 	0b0000111;
 	_pcc = 	0b1001000;
@@ -1679,7 +1679,7 @@ void setup()
 	_pdpu = 0b1111;
 	_cpc = 	0b00000000;			// comparador desativado
 	_ace4 = 1, _ace5 = 1;		// PA5/AN4 ACEL. PA6/AN5 MANO.
-	_adrfs = 1;					// formato dos dados na conversão AD. SADOH=D[11:8]; SADOL=D[7:0]
+	_adrfs = 1;					// formato dos dados na conversÃ£o AD. SADOH=D[11:8]; SADOL=D[7:0]
 	_sadc1 = 0b00000100;		// External signal - External analog channel input, ANn. clock fsys/16
 	_sadc2 = 0b00000000;		// Internal A/D converter power supply voltage VDD
 	
@@ -1687,20 +1687,20 @@ void setup()
 	_lvden = 1;					// ativa o monitoramento <= 4,0V
 	_vlvd2=1, _vlvd1=1, _vlvd2=1;
 		
-	// config. interrrupções
+	// config. interrrupÃ§Ãµes
 	_int1e = 1;					// ativa a int. externa 1. Flag _INT1F. Int. vector: 0x20
-	_int1s1 = 1, _int1s0 = 1;	// interrupção ocorre na borda de subida e descida
-	_tb1e = 1;					// interrupção do time base 1 ativada
+	_int1s1 = 1, _int1s0 = 1;	// interrupÃ§Ã£o ocorre na borda de subida e descida
+	_tb1e = 1;					// interrupÃ§Ã£o do time base 1 ativada
 	
 	
-	// config. timer			*** frequancia maxima do sinal para que o programa consiga ser executado é 7KHz ***
+	// config. timer			*** frequancia maxima do sinal para que o programa consiga ser executado Ã© 7KHz ***
 	_stmc0 = 0b01001000;		// tm em run, clock fsub (32KHz), tm on. Max: 2048ms (0,5Hz) - Min: 62,5uS (16KHz)
 	_stmc1 = 0b01010000;		// capture mode, falling edge, STM counter clear condition = Comparator P match 
 	_stmrp = 0;					// overflow em 65536
 	_t0cp = 1;					// STP pin enable
 	
 	// config. time base
-	_tbc = 0b10000100;			// time base zero: on, clock: ftbc, time-out periodo tb1: 2¹²(4096), tb0: 2¹²(4096)
+	_tbc = 0b10000100;			// time base zero: on, clock: ftbc, time-out periodo tb1: 2Â¹Â²(4096), tb0: 2Â¹Â²(4096)
 	
 	// carrega dados da eeprom
 	modo  = 	le_eeprom(0x00);	// Diesel ou Diesel/GNV 
@@ -1716,14 +1716,14 @@ void setup()
 	}
 	
 	temp = 	le_eeprom(0x02);		// temperatura limite EGT (menu)
-	temp_base = le_eeprom(0x10);	// temperatura base para definiçoes das opções de temperatura em: Menu >> EGT
+	temp_base = le_eeprom(0x10);	// temperatura base para definiÃ§oes das opÃ§Ãµes de temperatura em: Menu >> EGT
 	temp_base = (temp_base<<8);		// MSByte
 	temp_base += le_eeprom(0x11);	// LSByte
 	
-	atl_temps(temp);				// seleciona a temperatura limite com base na opção (temp 1...4)
+	atl_temps(temp);				// seleciona a temperatura limite com base na opÃ§Ã£o (temp 1...4)
 	
-	sa_ctrl = 	le_eeprom(0x03);	// indica se a função TPS está ON ou OFF
-	sa_fator =  le_eeprom(0x04);	// fator da função S.ACELERADOR
+	sa_ctrl = 	le_eeprom(0x03);	// indica se a funÃ§Ã£o TPS estÃ¡ ON ou OFF
+	sa_fator =  le_eeprom(0x04);	// fator da funÃ§Ã£o S.ACELERADOR
 	sa_xvalue = le_eeprom(0x05);	// MSByte do valor de 16 bits
 	sa_xvalue = (sa_xvalue<<8);		// desloca o valor para a parte alta dos 16bits da variavel int.
 	sa_xvalue += le_eeprom(0x06);	// LSByte
@@ -1733,13 +1733,13 @@ void setup()
 	t_1500 += le_eeprom(0x09);		// LSByte
 	rpm_sel = le_eeprom(0x0a);		// rpm selecionada (700, 900, 1100, 1300 ou 1500)
 	t_target = tt_calc(t_1500, rpm_sel);
-	t_800 = tt_calc(t_1500, 8);		// calcula qual é o periodo para 800 RPM
+	t_800 = tt_calc(t_1500, 8);		// calcula qual Ã© o periodo para 800 RPM
 	
-	// inicialização de variaveis e outputs
+	// inicializaÃ§Ã£o de variaveis e outputs
 	gnv_ctrl = 0;					// GNV off
 	led_sts = LED_OFF;				// led off
 	click = IDLE;					// sem click
-	periodo = 0xffff;				// timeout forçado
+	periodo = 0xffff;				// timeout forÃ§ado
 	periodo_val = periodo;
 	pval_saved = FALSE;
 	w_ret = IDLE;
@@ -1752,13 +1752,13 @@ void setup()
 	indice = 0;
 	time_bt = 0;
 	
-	// incialização do display e criação da tela principal
-	delay_ms(700);					// tempo para estabilização da tensão antes de inicializar o display
+	// incializaÃ§Ã£o do display e criaÃ§Ã£o da tela principal
+	delay_ms(700);					// tempo para estabilizaÃ§Ã£o da tensÃ£o antes de inicializar o display
 	
 	// Low voltage reset
-	_lvrc = 0b10011001;				// reset ao detectar tensão < 3,15V
+	_lvrc = 0b10011001;				// reset ao detectar tensÃ£o < 3,15V
 	
-	// caso seja detectada tensão abaixo de 3,6V, aguarda a estabilização da mesma
+	// caso seja detectada tensÃ£o abaixo de 3,6V, aguarda a estabilizaÃ§Ã£o da mesma
 	// timeout de 1,4s
 	while((_lvdo == 1)&&(time_bt<11))						
 	{
@@ -1768,10 +1768,10 @@ void setup()
 	int_ssd();						// inicializa o display oled
 	clear_dsp();					// limpa o display
 	
-	// incialização da UART. 8N1
+	// incializaÃ§Ã£o da UART. 8N1
 	uart_init(BAUD_38400);
 	
-	// com o botão da interface pressionado no poweron 
+	// com o botÃ£o da interface pressionado no poweron 
 	if(bt == PRESS)
 	{
 		modo_config = TRUE;
@@ -1793,10 +1793,10 @@ void setup()
 		_mf0e = 1, _stmae = 1, _stmpe = 1;
 	}
 			
-	// config. interrrupções
+	// config. interrrupÃ§Ãµes
 	_int1e = 1;					// ativa a int. externa 1 (bt). Flag _INT1F. Int. vector: 0x20	
 }
-// fim das funções_________________________________________________________________________
+// fim das funÃ§Ãµes_________________________________________________________________________
 
 // main____________________________________________________________________________________
 void main()
@@ -1811,7 +1811,7 @@ void main()
 		if(modo_config == TRUE)
 		{
 			click = IDLE;	
-			edit_tb();		// função p/ edição
+			edit_tb();		// funÃ§Ã£o p/ ediÃ§Ã£o
 			modo_config = FALSE;
 			atl_mscreen(ALL);
 			// ativa a int. M Funct.0, int. dos camparadores A e P do stm (timer que mede t do pulso)
@@ -1822,7 +1822,7 @@ void main()
 		// verifica se ocrreu um click curto para que seja realizada a troca de modo_______
 		if(click == CURTO)
 		{
-			// alteração do modo de operação
+			// alteraÃ§Ã£o do modo de operaÃ§Ã£o
 			if(modo == Diesel)
 			{
 				modo = DieselGnv;	
@@ -1836,13 +1836,13 @@ void main()
 			
 			click = IDLE;		// reset da variavel
 		}
-		else if(click == LONGO) // ativação do menu somente no modo Diesel
+		else if(click == LONGO) // ativaÃ§Ã£o do menu somente no modo Diesel
 		{
 			click = IDLE;		// limpa o status do click
 			menu();				// abre o menu
 		}
 		
-		// atulização periódia do display_____________________________________________________
+		// atulizaÃ§Ã£o periÃ³dia do display_____________________________________________________
 		if(go_atl == 0)
 		{	
 			if(ack_sts == NACK)			// NACK = Sem reposta do display
@@ -1865,57 +1865,57 @@ void main()
 			atl_mscreen(ALL);
 		}
 		
-		egt_com();		// comunicação com a unidade EGT___________________________________
+		egt_com();		// comunicaÃ§Ã£o com a unidade EGT___________________________________
 
 		main_scan();	// scan para on/off do GNV_________________________________________
 	}
 }
 // fim do main_____________________________________________________________________________
 
-// Vetores interrupções____________________________________________________________________
-void int_ext1()			// interrupção externa 1. A flag é auto-reset
+// Vetores interrupÃ§Ãµes____________________________________________________________________
+void int_ext1()			// interrupÃ§Ã£o externa 1. A flag Ã© auto-reset
 {
 	// detecta qual a borda. subida ou descida
 	if(bt == PRESS)
 	{
 		time_bt = 0;	// zera a contagem de tempo
-		start_tbt = RUN;// sinaliza que a contagem de tempo está em curso
+		start_tbt = RUN;// sinaliza que a contagem de tempo estÃ¡ em curso
 	}
 	else				// borda de descida
 	{
-		// o tempo que o botão ficou pressionado é menor que 3s e maior que 256ms ???
+		// o tempo que o botÃ£o ficou pressionado Ã© menor que 3s e maior que 256ms ???
 		if((time_bt<23) && (time_bt>=1) && (start_tbt == RUN))
 		{
 			click = CURTO;
-			timeout_menu = 0;	// click do botão reseta a contagem de tempo (inatividade no menu)
+			timeout_menu = 0;	// click do botÃ£o reseta a contagem de tempo (inatividade no menu)
 			start_tbt = STOP;
 		}
 	}
 }
 //_________________________________________________________________________________________
-void int_mf0()			// interrupções dos comparadores A e P do stm
+void int_mf0()			// interrupÃ§Ãµes dos comparadores A e P do stm
 {
 	if(_stmaf == 1)
 	{
 		_stmaf = 0;		// limpa o flag da int.	
 		_ston = 0;		// para a contagem de tempo
 		
-		// primeira borda de descida após a ocorrência de timout (ausência de pulso). Medição é descartada.
-		// da segunda borda de descida em diante as medições são feitas
+		// primeira borda de descida apÃ³s a ocorrÃªncia de timout (ausÃªncia de pulso). MediÃ§Ã£o Ã© descartada.
+		// da segunda borda de descida em diante as mediÃ§Ãµes sÃ£o feitas
 		if(tout_erro == FALSE)
 		{
 			// se == NONE significa que houve um timeout (ausencia de pulso) antes de desta borda de descida
-			// capturada. Sendo assim, só começa a reliazar a medição do (t) do pulso na proxima borda de descida
-			periodo = _stmah;			// salva o periodo (número de 16 bits)
+			// capturada. Sendo assim, sÃ³ comeÃ§a a reliazar a mediÃ§Ã£o do (t) do pulso na proxima borda de descida
+			periodo = _stmah;			// salva o periodo (nÃºmero de 16 bits)
 			periodo = (periodo<<8);
 			periodo += _stmal;
 			_ston = 1;					// reinicia a contagem
 			
 			// Range - 7KHz ~ 0,51Hz
-			// o periodo deve ser maior que 142us. 7KHz é a frequencia maxima aceitavel
+			// o periodo deve ser maior que 142us. 7KHz Ã© a frequencia maxima aceitavel
 			if((periodo > 3) && (periodo < 62000))		
 			{
-				pulso_sts = OK;			// sinaliza que há um sinal pulsante valido
+				pulso_sts = OK;			// sinaliza que hÃ¡ um sinal pulsante valido
 				periodo_val = periodo;
 				pval_saved = TRUE;
 			}
@@ -1924,7 +1924,7 @@ void int_mf0()			// interrupções dos comparadores A e P do stm
 				if(poweron == TRUE)		// somente no primeiro acionamento
 				{
 					pulso_sts = NONE;	// periodo (pulso) invalido
-					tout_erro = TRUE;	// indica a ocorrência de timeout. Na 1ª borda de descida a medição do periodo será descartada
+					tout_erro = TRUE;	// indica a ocorrÃªncia de timeout. Na 1Âª borda de descida a mediÃ§Ã£o do periodo serÃ¡ descartada
 				}
 				pval_saved = FALSE;
 			}
@@ -1932,36 +1932,36 @@ void int_mf0()			// interrupções dos comparadores A e P do stm
 		else
 		{
 			_ston = 1;					// reinicia a contagem
-			tout_erro = FALSE;			// na próxima borda de descida será feita a medição do periodo 
+			tout_erro = FALSE;			// na prÃ³xima borda de descida serÃ¡ feita a mediÃ§Ã£o do periodo 
 		}
 	}
 	
-	// int. do comparador P. Ausência de pulso
+	// int. do comparador P. AusÃªncia de pulso
 	if(_stmpf == 1)
 	{
 		_stmpf = 0;					// limpa o flag da int.	
 		pulso_sts = NONE;
 		periodo = 0xffff;
 		periodo_val = periodo;
-		tout_erro = TRUE;			// indica a ocorrência de timeout. Na 1ª borda de descida a medição do periodo será descartada
+		tout_erro = TRUE;			// indica a ocorrÃªncia de timeout. Na 1Âª borda de descida a mediÃ§Ã£o do periodo serÃ¡ descartada
 		indice = 0;	
 	}
 }
 //_________________________________________________________________________________________
-void int_tb1()			// base de tempo de 128ms. A flag é auto-reset
+void int_tb1()			// base de tempo de 128ms. A flag Ã© auto-reset
 {
-	time_bt++;			// contagem maxima é 255 (32,3s)
+	time_bt++;			// contagem maxima Ã© 255 (32,3s)
 	timeout_menu++;		// incrementa a contagem de tempo (inatividade no menu)
 	
-	// verifica se a contagem de tempo de click do botão está em curso
+	// verifica se a contagem de tempo de click do botÃ£o estÃ¡ em curso
 	if((start_tbt == RUN) && (time_bt>20))
 	{
 		click = LONGO;
-		timeout_menu = 0;	// click do botão reseta a contagem de tempo (inatividade no menu)
+		timeout_menu = 0;	// click do botÃ£o reseta a contagem de tempo (inatividade no menu)
 		start_tbt = STOP;
 	}
 	
-	// tempo para atualização do display - taxa de atualização: 2,6Hz 384ms
+	// tempo para atualizaÃ§Ã£o do display - taxa de atualizaÃ§Ã£o: 2,6Hz 384ms
 	if(go_atl > 2)	
 	{
 		go_atl = 0;
@@ -1982,7 +1982,7 @@ void int_tb1()			// base de tempo de 128ms. A flag é auto-reset
 	}
 }
 //_________________________________________________________________________________________
-void UART_ISR()			// recepção UART
+void UART_ISR()			// recepÃ§Ã£o UART
 {
 	UART_ISR_Value 	= 0;		// clear receive value				
 	
@@ -1997,11 +1997,11 @@ void UART_ISR()			// recepção UART
 	_rxif = 0;					// data register has available data
 	UART_ISR_Value = _txr_rxr;	// move o byte para a variavel de usuario
 	
-	// verifica se está aguardando resposta
+	// verifica se estÃ¡ aguardando resposta
 	if((w_ret == WAINTING) && (ctrl_byte<=5))
 	{
 		buffer[ctrl_byte] = UART_ISR_Value;
 		ctrl_byte++;
 	}
 }
-// fim dos vetores de interrupções_________________________________________________________
+// fim dos vetores de interrupÃ§Ãµes_________________________________________________________
