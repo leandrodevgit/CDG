@@ -1,6 +1,6 @@
 // ///////////////////////////////// CDG_V111 /////////////////////////////////////
-// programa p/ pci CDG-V1.1 (central diesel gnv)
-// 01/2022. Tamanho do programa em linhas: 2533
+// programa p/ pci CDG-V1.2 (central diesel gnv)
+// 08/2022. Tamanho do programa em linhas: 2533
 
 // #includes_______________________________________________________________________________
 #include "HT66F0195.h"
@@ -18,7 +18,7 @@
 // Delcarações #DEFINE_____________________________________________________________________
 // Ios
 #define sw1 		_pb0
-#define bt 			_pb1
+#define bt 		_pb1
 #define en_ind 		_pb3
 #define en_hall 	_pb4
 #define en_tja 		_pb5
@@ -34,9 +34,9 @@
 #define LED_OFF 	0
 #define Diesel 		0	// modo
 #define DieselGnv 	1	// modo
-#define OK 			1	// pulso_sts
+#define OK 		1	// pulso_sts
 #define NONE 		0	// pulso_sts
-#define On 			1	// sa_ctrl = 1
+#define On 		1	// sa_ctrl = 1
 #define Off 		2	// sa_ctrl = 2
 #define POSITIVO 	1	// fator POSITIVO para a leitura do sinal do acelerador
 #define NEGATIVO 	2	// fator NEGATIVO para a leitura do sinal do acelerador
@@ -56,19 +56,19 @@
 #define LEVEL 		3	// Nivel de GNV
 #define TEMP  		4	// Indicação de temperatura alta
 #define PULSE 		5	// Indicação de pulso OK
-#define Tps	  		6 	// Indicação da função TPS ativa
+#define Tps	  	6 	// Indicação da função TPS ativa
 #define MCON		7	// Mensagem do modo_config ativado
 
 #define CURTO 		0	// botão da interface. click curto
 #define LONGO 		1	// click longo
 #define IDLE  		2	// idle (sem click)
-#define RUN	  		1	// contagem de tempo de click do botão em curso
+#define RUN	  	1	// contagem de tempo de click do botão em curso
 #define STOP  		0 	// contagem de tempo de click do botão paralizada
 
-#define BAUD_38400	25				// baud rate de 38400 p/ 16MHz
-#define READ_EGT	0xff55			// msg que solicita a leitura da sonda EGT
-#define ID			0b10101010		// (170) ID do hardware ulizado para envio de msg via UART (CAN / BUS)
-#define ID_EGT 		0b01000110		// (70) ID da unidade leitora da sonda EGT
+#define BAUD_38400	25	// baud rate de 38400 p/ 16MHz
+#define READ_EGT	0xff55	// msg que solicita a leitura da sonda EGT
+#define ID		0b10101010	// (170) ID do hardware ulizado para envio de msg via UART (CAN / BUS)
+#define ID_EGT 		0b01000110	// (70) ID da unidade leitora da sonda EGT
 #define dez_sec		80
 
 // fim das declarações #DEFINE_____________________________________________________________
@@ -87,52 +87,52 @@ void __attribute((interrupt(0x2C))) UART_ISR();	// vetor da int. UART RX
 
 //variaveis globais________________________________________________________________________
 
-extern unsigned char 	ack_sts;			// indica erro na comunicação I2C (ACK=1) 1 = erro - 0 = ok
-											// variavel localizada no arquivo dsp_funcs.C
-unsigned char 			UART_ISR_Value;		// uart receive buff
-volatile unsigned char 	error_rx_flag;		// uart receive error
+extern unsigned char 	ack_sts;	// indica erro na comunicação I2C (ACK=1) 1 = erro - 0 = ok
+					// variavel localizada no arquivo dsp_funcs.C
+unsigned char 	UART_ISR_Value;		// uart receive buff
+volatile unsigned char 	error_rx_flag;	// uart receive error
 
-unsigned char 			modo;				// indica qual o combustivel em uso: 0 GNV - 1 Diesel/GNV - 0x00
-bit 					modo_config;		// flag que indica se o modo config está tivado (TRUE) ou Não FALSE
-unsigned char 			s_type;				// inidica qual o tipo de sinal será lido. 0 Hall - 1 Indutivo - 0x01
-volatile unsigned char 	pulso_sts;			// indica se há pulso (hall ou indutivo) presente. OK ou NONE
-volatile unsigned int 	periodo;			// variavel p/ armazenar o periodo(t) do pulso medido via stm
-volatile unsigned int 	periodo_val;		// variavel p/ armazenar o periodo valido
-volatile unsigned char 	pval_saved;			// flag usada na calibração da RPM. Informa quendo um perido valido foi salvo
-volatile unsigned char  indice;				// 4 leituras de periodo validas em sequencia devem ser computadas
-volatile unsigned char 	media_ok;			// flag que sinaliza que a média dos 4 periodos foi calculada
-unsigned int t_buffer[4];					// buffer para armazenar 4 periodos (tempos medidos via smt)
-volatile unsigned char 	tout_erro;			// indica TimeOut ou periodo invalido na medição
-unsigned char 			temp_sts;			// indica se a temperatura EGT está acima do nivel selecionado
-volatile unsigned char 	timeout_menu;		// inatividade dentro do menu gera a saída do mesmo na ocorrência de timeout
-volatile unsigned char 	click;				// indica se o click do botão da interface foi curto, longo ou está em idle
-volatile unsigned char 	time_bt;			// contagem de tempo para a medição de tempo do click do botão da interface
-volatile unsigned char 	start_tbt;			// indica que a contagem do tempo de click do botão está em curso
-char 					sa_flag = 2;		// flag que indica que o pedal do acelerador não está em repouso (posição neutra)
-unsigned int 			sa_xvalue;			// contem o valor que será comparado com o valor sa_value (lido em AN4)	
-unsigned int 			sa_value;			// valor de tensão do acelerador
-unsigned char 			sa_ctrl;			// ON/OFF p/ a função sensor do acelerador
-unsigned char 			sa_fator;			// fator 1(+) = a tensão AUMENTA conforme o pelal vai ao fim de curso
-											// fator 2(-) = a tensão DIMINUI conforme o pedal vai ao fim de curso
-unsigned char 			rpm_sel;			// indica qual a rpm que está selecionada. 7(700), 9(900), 11(1100), 13(1300), 15(1500)
-unsigned int 			t_target;			// periodo alvo com base na rpm selecionada
-unsigned int 			t_800;				// periodo de 800 RPM usado para corte do GNV através da RPM marcha lenta. Usado quando TPS = OFF
-unsigned char 			last_atl;			// armazena qual foi o último valor atualizado para determindado parâmetro		
-volatile unsigned char 	poweron;			// utilizada para o primeiro acionamento do GNV. 1 = 1º acionamento, 0 = 2º ou >	
-unsigned char 			cnt;	
-unsigned long 			msg;				// var. de 4 bytes p/ msg a ser enviada p/ a unidade de leitura da sonda EGT
-volatile unsigned char 	r_egt;				// liberação p/ a leitura da sonda EGT	
-volatile unsigned char 	w_ret;				// 1 = esperando resposta da unidade EGT, 0 = não está aguardando reposta	
-unsigned int 			egt_temp;			// temperatura da sonda EGT. Dado recebido via UART
-unsigned int 			egt_temp_target;	// temperatura limite de operação
-unsigned char 			temp;				// temperatura limite EGT (menu)
-unsigned int 			temp_base;			// temperatura que serve de base para se cacular as temperaturas (opções) do menu	
-bit 					TermoPar_status;	// 1 = termopar aberto ou cabeamento rompido
-char 					egt_status;			// relativo a comunicação com a unidade EGT. OK, ERRO ou TimeOut
-volatile unsigned char 	buffer[6];			// buffer para armazenar a msg via UART / CAN
-volatile unsigned char 	ctrl_byte;			// controle da recepção dos 6 bytes	
-unsigned char 			go_atl;				// liberação p/ a atualização do display
-unsigned int 			cnt_leituras;		// leituras consecutivas devem ser capturas para evitar ruido na zona de transição		
+unsigned char 	modo;			// indica qual o combustivel em uso: 0 GNV - 1 Diesel/GNV - 0x00
+bit modo_config;			// flag que indica se o modo config está tivado (TRUE) ou Não FALSE
+unsigned char s_type;			// inidica qual o tipo de sinal será lido. 0 Hall - 1 Indutivo - 0x01
+volatile unsigned char 	pulso_sts;	// indica se há pulso (hall ou indutivo) presente. OK ou NONE
+volatile unsigned int 	periodo;	// variavel p/ armazenar o periodo(t) do pulso medido via stm
+volatile unsigned int 	periodo_val;	// variavel p/ armazenar o periodo valido
+volatile unsigned char 	pval_saved;	// flag usada na calibração da RPM. Informa quendo um perido valido foi salvo
+volatile unsigned char  indice;		// 4 leituras de periodo validas em sequencia devem ser computadas
+volatile unsigned char 	media_ok;	// flag que sinaliza que a média dos 4 periodos foi calculada
+unsigned int t_buffer[4];		// buffer para armazenar 4 periodos (tempos medidos via smt)
+volatile unsigned char 	tout_erro;	// indica TimeOut ou periodo invalido na medição
+unsigned char temp_sts;			// indica se a temperatura EGT está acima do nivel selecionado
+volatile unsigned char 	timeout_menu;	// inatividade dentro do menu gera a saída do mesmo na ocorrência de timeout
+volatile unsigned char 	click;		// indica se o click do botão da interface foi curto, longo ou está em idle
+volatile unsigned char 	time_bt;	// contagem de tempo para a medição de tempo do click do botão da interface
+volatile unsigned char 	start_tbt;	// indica que a contagem do tempo de click do botão está em curso
+char sa_flag = 2;			// flag que indica que o pedal do acelerador não está em repouso (posição neutra)
+unsigned int 	sa_xvalue;		// contem o valor que será comparado com o valor sa_value (lido em AN4)	
+unsigned int 	sa_value;		// valor de tensão do acelerador
+unsigned char 	sa_ctrl;		// ON/OFF p/ a função sensor do acelerador
+unsigned char 	sa_fator;		// fator 1(+) = a tensão AUMENTA conforme o pelal vai ao fim de curso
+					// fator 2(-) = a tensão DIMINUI conforme o pedal vai ao fim de curso
+unsigned char 	rpm_sel;		// indica qual a rpm que está selecionada. 7(700), 9(900), 11(1100), 13(1300), 15(1500)
+unsigned int 	t_target;		// periodo alvo com base na rpm selecionada
+unsigned int 	t_800;			// periodo de 800 RPM usado para corte do GNV através da RPM marcha lenta. Usado quando TPS = OFF
+unsigned char 	last_atl;		// armazena qual foi o último valor atualizado para determindado parâmetro		
+volatile unsigned char 	poweron;	// utilizada para o primeiro acionamento do GNV. 1 = 1º acionamento, 0 = 2º ou >	
+unsigned char 	cnt;	
+unsigned long 	msg;			// var. de 4 bytes p/ msg a ser enviada p/ a unidade de leitura da sonda EGT
+volatile unsigned char 	r_egt;		// liberação p/ a leitura da sonda EGT	
+volatile unsigned char 	w_ret;		// 1 = esperando resposta da unidade EGT, 0 = não está aguardando reposta	
+unsigned int egt_temp;			// temperatura da sonda EGT. Dado recebido via UART
+unsigned int egt_temp_target;		// temperatura limite de operação
+unsigned char temp;			// temperatura limite EGT (menu)
+unsigned int temp_base;			// temperatura que serve de base para se cacular as temperaturas (opções) do menu	
+bit TermoPar_status;			// 1 = termopar aberto ou cabeamento rompido
+char egt_status;			// relativo a comunicação com a unidade EGT. OK, ERRO ou TimeOut
+volatile unsigned char 	buffer[6];	// buffer para armazenar a msg via UART / CAN
+volatile unsigned char 	ctrl_byte;	// controle da recepção dos 6 bytes	
+unsigned char go_atl;			// liberação p/ a atualização do display
+unsigned int cnt_leituras;		// leituras consecutivas devem ser capturas para evitar ruido na zona de transição		
 // fim das declarações de variaveis gloabais_______________________________________________
 
 // funções_________________________________________________________________________________
