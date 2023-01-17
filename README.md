@@ -9,10 +9,15 @@ Abaixo as principais características da CDG (Central Diesel GNV):
 Interface gráfica em display OLED 0,96" que permite viualisação de parâmetros do sistema como:
  
 1 - Modo de operação em uso (DIESEL / DIESEL GNV);
+
 2 - Indicação de sinal de rotação válido;
+
 3 - Status do redutor de pressão (ON/OFF);
+
 4 - Status da função TPS (Ativada / desativada);
+
 5 - Status da unidade EGT (Conectada, desconectada, erro no termopar e overheat);
+
 6 - Indicação do nível de GNV do sistema.  
 
 Funções de auto diagnóstico de falhas, calibração e monitoramento de parâmetros do sistema;
